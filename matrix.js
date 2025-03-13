@@ -11,16 +11,24 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 // Matrix characters (including some Mario-themed characters)
-const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ🍄⭐🌟';
+const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ🥋👊🤜🤛🦶';
+const fighters = ['🥋', '👊', '🤜', '🤛', '🦶'];
 const charArray = chars.split('');
 
 const fontSize = 14;
 const columns = canvas.width / fontSize;
 const drops = [];
+const fighterStates = [];
 
-// Initialize drops
+// Initialize drops and fighter states
 for (let i = 0; i < columns; i++) {
     drops[i] = 1;
+    fighterStates[i] = {
+        isFighter: Math.random() < 0.1, // 10% chance of being a fighter
+        fighterIndex: Math.floor(Math.random() * fighters.length),
+        isAttacking: false,
+        frameCount: 0
+    };
 }
 
 // Draw the Matrix rain
@@ -35,8 +43,26 @@ function draw() {
 
     // Draw characters
     for (let i = 0; i < drops.length; i++) {
-        // Random character
-        const char = charArray[Math.floor(Math.random() * charArray.length)];
+        let char;
+        
+        // Handle fighter animation
+        if (fighterStates[i].isFighter) {
+            fighterStates[i].frameCount++;
+            
+            // Change fighter state every 20 frames
+            if (fighterStates[i].frameCount % 20 === 0) {
+                fighterStates[i].isAttacking = !fighterStates[i].isAttacking;
+                if (fighterStates[i].isAttacking) {
+                    fighterStates[i].fighterIndex = Math.floor(Math.random() * (fighters.length - 1)) + 1;
+                } else {
+                    fighterStates[i].fighterIndex = 0;
+                }
+            }
+            
+            char = fighters[fighterStates[i].fighterIndex];
+        } else {
+            char = charArray[Math.floor(Math.random() * (charArray.length - fighters.length))];
+        }
         
         // Draw the character
         ctx.fillText(char, i * fontSize, drops[i] * fontSize);
@@ -44,11 +70,16 @@ function draw() {
         // Reset drop if it reaches bottom or randomly
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
             drops[i] = 0;
+            // Randomize fighter state for next drop
+            fighterStates[i].isFighter = Math.random() < 0.1;
+            fighterStates[i].fighterIndex = Math.floor(Math.random() * fighters.length);
+            fighterStates[i].isAttacking = false;
+            fighterStates[i].frameCount = 0;
         }
 
         drops[i]++;
     }
 }
 
-// Animate
-setInterval(draw, 33); 
+// Animate at 60 FPS for smoother animations
+setInterval(draw, 1000/60); 
